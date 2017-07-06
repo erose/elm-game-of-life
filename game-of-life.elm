@@ -192,16 +192,29 @@ view model =
         boardSizeInPixels =
             toString <| cellsOnASide * cellSizeInPixels
     in
-        svg
-            [ width boardSizeInPixels
-            , height boardSizeInPixels
-            , Html.Attributes.style <|
-                if model.paused then
-                    [ ( "backgroundColor", "lightBlue" ) ]
-                else
-                    []
+        Html.div []
+            [ svg
+                [ width boardSizeInPixels
+                , height boardSizeInPixels
+                , Html.Attributes.style <|
+                    [ ( "border", "1px solid black" ) ]
+                        ++ if model.paused then
+                            [ ( "backgroundColor", "lightBlue" ) ]
+                           else
+                            []
+                ]
+                (renderBoard model.board)
+            , Html.div [] [ text helpText ]
             ]
-            (renderBoard model.board)
+
+
+helpText : String
+helpText =
+    """
+Press 'p' to pause. Click to turn a cell alive or kill it.
+
+(Hint: to get started, pause and then click to set up a seed pattern.)
+"""
 
 
 renderBoard : Board -> List (Svg Msg)

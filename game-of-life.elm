@@ -7,11 +7,11 @@ import Svg exposing (Svg, svg, text, rect)
 import Svg.Events exposing (onClick)
 import Svg.Attributes exposing (..)
 import Char
-import Color
 import Dict exposing (Dict)
 import Time exposing (Time)
 
 
+main : Program Never Model Msg
 main =
     Html.program { init = init, view = view, update = update, subscriptions = subscriptions }
 
@@ -32,6 +32,7 @@ type alias Model =
     { board : Board, paused : Bool }
 
 
+cellsOnASide : Int
 cellsOnASide =
     50
 
@@ -180,6 +181,7 @@ neighborhood ( cellX, cellY ) =
 -- VIEW
 
 
+cellSizeInPixels : Int
 cellSizeInPixels =
     10
 

@@ -39,7 +39,7 @@ cellsOnASide =
 
 init : ( Model, Cmd Msg )
 init =
-    ( { board = initialBoard cellsOnASide, paused = False }, Cmd.none )
+    ( { board = initialBoard cellsOnASide, paused = True }, Cmd.none )
 
 
 initialBoard : Int -> Board
@@ -211,9 +211,7 @@ view model =
 helpText : String
 helpText =
     """
-Press 'p' to pause. Click to turn a cell alive or kill it.
-
-(Hint: to get started, pause and then click to set up a seed pattern.)
+Click to set up your cells, then press 'p' to unpause.
 """
 
 

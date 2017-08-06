@@ -3,6 +3,7 @@ module Main exposing (..)
 import Html exposing (Html)
 import Html.Attributes
 import Keyboard
+import Key
 import Svg exposing (Svg, svg, text, rect)
 import Svg.Events exposing (onClick)
 import Svg.Attributes exposing (..)
@@ -69,6 +70,7 @@ cartesianProduct xs ys =
 type Msg
     = ToggleCell Point
     | TogglePause
+    | OneStep
     | NoOp
     | Tick Time
 
@@ -82,17 +84,18 @@ update msg model =
                     { model | board = Dict.update point toggleCell model.board }
 
                 Tick time ->
-                    let
-                        { paused, board } =
-                            model
-                    in
-                        { model
-                            | board =
-                                if paused then
-                                    board
-                                else
-                                    stepSimulation board
-                        }
+                    if model.paused then
+                        model
+                    else
+                        { model | board = stepSimulation model.board }
+
+                OneStep ->
+                    -- I've decided to make this action only applicable when the simulation is
+                    -- paused.
+                    if (not model.paused) then
+                        model
+                    else
+                        { model | board = stepSimulation model.board }
 
                 TogglePause ->
                     { model | paused = not model.paused }
@@ -186,32 +189,52 @@ cellSizeInPixels =
     10
 
 
+
+-- Only for development using elm-reactor.
+
+
+stylesheet : String -> Html msg
+stylesheet filepath =
+    Html.node "link" [ Html.Attributes.rel "stylesheet", Html.Attributes.href filepath ] []
+
+
 view : Model -> Html Msg
 view model =
     let
         boardSizeInPixels =
             toString <| cellsOnASide * cellSizeInPixels
+
+        stylePairs =
+            [ ( "border", "1px solid black" ) ]
+                ++ if model.paused then
+                    [ ( "backgroundColor", "lightBlue" ) ]
+                   else
+                    []
     in
         Html.div []
-            [ svg
+            [ -- stylesheet "style.css",
+              svg
                 [ width boardSizeInPixels
                 , height boardSizeInPixels
-                , Html.Attributes.style <|
-                    [ ( "border", "1px solid black" ) ]
-                        ++ if model.paused then
-                            [ ( "backgroundColor", "lightBlue" ) ]
-                           else
-                            []
+                , Html.Attributes.style stylePairs
                 ]
                 (renderBoard model.board)
-            , Html.div [] [ text helpText ]
+            , Html.div
+                []
+                [ text <| helpText model
+                ]
             ]
 
 
-helpText : String
-helpText =
-    """
-Click to set up your cells, then press 'p' to unpause.
+helpText : Model -> String
+helpText model =
+    if model.paused then
+        """
+Click a cell to set its state. Press 'p' to toggle pause. Press the right arrow key to run just one step.
+"""
+    else
+        """
+Click a cell to set its state. Press 'p' to toggle pause.
 """
 
 
@@ -225,6 +248,7 @@ renderCell ( ( cellX, cellY ), isAlive ) =
     rect
         [ x <| toScreenCoordinate cellX
         , y <| toScreenCoordinate cellY
+        , class "cell"
         , width <| toString cellSizeInPixels
         , height <| toString cellSizeInPixels
         , onClick <| ToggleCell ( cellX, cellY )
@@ -252,9 +276,12 @@ subscriptions model =
         [ Time.every (100 * Time.millisecond) Tick
         , Keyboard.downs
             (\keyCode ->
-                case (Char.fromCode keyCode) of
-                    'P' ->
+                case (Key.fromCode keyCode) of
+                    Key.P ->
                         TogglePause
+
+                    Key.ArrowRight ->
+                        OneStep
 
                     _ ->
                         NoOp
